@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CardView Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card-container {
+            perspective: 1000px;
+            width: 600px;
+            height: 400px;
+            margin: 20px auto;
+            cursor: pointer;
+        }
+        .card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 600ms ease-in-out;
+            transform-style: preserve-3d;
+        }
+        .card-container[data-flipped="true"] .card {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card-front {
+            transform: rotateY(0deg);
+        }
+        .card-back {
+            transform: rotateY(180deg);
+        }
+        .card-content p {
+            font-size: 24px;
+            text-align: center;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .test-results {
+            margin-top: 20px;
+            padding: 10px;
+            background: #e8f5e9;
+            border-radius: 4px;
+        }
+        .test-results.error {
+            background: #ffebee;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>CardView Class Test</h1>
+        
+        <div class="card-container" id="card-container" data-flipped="false">
+            <div class="card">
+                <div class="card-front">
+                    <div class="card-content">
+                        <p>Question will appear here</p>
+                    </div>
+                </div>
+                <div class="card-back">
+                    <div class="card-content">
+                        <p>Answer will appear here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="text-align: center;">
+            <button onclick="testRender()">Test Render</button>
+            <button onclick="testFlip()">Test Flip</button>
+            <button onclick="testIsFlipping()">Test isFlipping()</button>
+            <button onclick="testRenderQuestion()">Render Question Side</button>
+            <button onclick="testRenderAnswer()">Render Answer Side</button>
+            <button onclick="runAllTests()">Run All Tests</button>
+        </div>
+        
+        <div id="test-results" class="test-results"></div>
+    </div>
+    
+    <script src="static/js/cardView.js"></script>
+    <script>
+        let cardView;
+        let testResults = [];
+        
+        // Initialize CardView
+        function init() {
+            const container = document.getElementById('card-container');
+            cardView = new CardView(container);
+            log('CardView initialized');
+        }
+        
+        function log(message, isError = false) {
+            testResults.push({ message, isError });
+            updateResults();
+        }
+        
+        function updateResults() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '<h3>Test Results:</h3>' + 
+                testResults.map(r => `<p style="color: ${r.isError ? 'red' : 'green'}">${r.message}</p>`).join('');
+        }
+        
+        function testRender() {
+            testResults = [];
+            const testCard = {
+                question: 'What is 2 + 2?',
+                answer: '4'
+            };
+            
+            cardView.render(testCard, true);
+            
+            const frontText = document.querySelector('.card-front .card-content p').textContent;
+            const backText = document.querySelector('.card-back .card-content p').textContent;
+            
+            if (frontText === testCard.question) {
+                log('✓ Render test passed: Question rendered correctly');
+            } else {
+                log('✗ Render test failed: Question not rendered correctly', true);
+            }
+            
+            if (backText === testCard.answer) {
+                log('✓ Render test passed: Answer rendered correctly');
+            } else {
+                log('✗ Render test failed: Answer not rendered correctly', true);
+            }
+            
+            if (!cardView.isFlipped) {
+                log('✓ Render test passed: Card shows question side');
+            } else {
+                log('✗ Render test failed: Card should show question side', true);
+            }
+        }
+        
+        function testFlip() {
+            testResults = [];
+            const initialState = cardView.isFlipped;
+            
+            cardView.flip();
+            
+            if (cardView.isFlipped !== initialState) {
+                log('✓ Flip test passed: isFlipped state toggled');
+            } else {
+                log('✗ Flip test failed: isFlipped state did not toggle', true);
+            }
+            
+            const dataFlipped = document.getElementById('card-container').getAttribute('data-flipped');
+            if (dataFlipped === cardView.isFlipped.toString()) {
+                log('✓ Flip test passed: DOM attribute updated');
+            } else {
+                log('✗ Flip test failed: DOM attribute not updated', true);
+            }
+        }
+        
+        function testIsFlipping() {
+            testResults = [];
+            
+            if (!cardView.isFlipping()) {
+                log('✓ isFlipping test passed: Not animating initially');
+            } else {
+                log('✗ isFlipping test failed: Should not be animating', true);
+            }
+            
+            cardView.flip();
+            
+            if (cardView.isFlipping()) {
+                log('✓ isFlipping test passed: Animating during flip');
+            } else {
+                log('✗ isFlipping test failed: Should be animating', true);
+            }
+            
+            // Test that flip is prevented during animation
+            const stateBefore = cardView.isFlipped;
+            cardView.flip(); // Try to flip again
+            
+            if (cardView.isFlipped === stateBefore) {
+                log('✓ isFlipping test passed: Flip prevented during animation');
+            } else {
+                log('✗ isFlipping test failed: Flip should be prevented during animation', true);
+            }
+            
+            // Wait for animation to complete
+            setTimeout(() => {
+                if (!cardView.isFlipping()) {
+                    log('✓ isFlipping test passed: Animation completed after 600ms');
+                } else {
+                    log('✗ isFlipping test failed: Animation should be complete', true);
+                }
+            }, 650);
+        }
+        
+        function testRenderQuestion() {
+            testResults = [];
+            const testCard = {
+                question: 'Test Question',
+                answer: 'Test Answer'
+            };
+            
+            cardView.render(testCard, true);
+            
+            if (!cardView.isFlipped) {
+                log('✓ Render question test passed: Shows question side');
+            } else {
+                log('✗ Render question test failed: Should show question side', true);
+            }
+        }
+        
+        function testRenderAnswer() {
+            testResults = [];
+            const testCard = {
+                question: 'Test Question',
+                answer: 'Test Answer'
+            };
+            
+            cardView.render(testCard, false);
+            
+            if (cardView.isFlipped) {
+                log('✓ Render answer test passed: Shows answer side');
+            } else {
+                log('✗ Render answer test failed: Should show answer side', true);
+            }
+        }
+        
+        function runAllTests() {
+            testResults = [];
+            log('=== Running All Tests ===');
+            
+            // Reset to known state
+            const testCard = {
+                question: 'What is the capital of France?',
+                answer: 'Paris'
+            };
+            cardView.render(testCard, true);
+            
+            setTimeout(() => {
+                testRender();
+                setTimeout(() => {
+                    testFlip();
+                    setTimeout(() => {
+                        testIsFlipping();
+                        setTimeout(() => {
+                            testRenderQuestion();
+                            setTimeout(() => {
+                                testRenderAnswer();
+                                log('=== All Tests Complete ===');
+                            }, 100);
+                        }, 100);
+                    }, 700);
+                }, 100);
+            }, 100);
+        }
+        
+        // Initialize on page load
+        window.onload = init;
+    </script>
+</body>
+</html>

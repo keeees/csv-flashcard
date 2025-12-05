@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard Study App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header role="banner">
+        <h1>Flashcard Study App</h1>
+    </header>
+    
+    <main role="main">
+        <section class="file-selector" aria-label="File selection">
+            <label for="file-select">Select a flashcard deck:</label>
+            <select id="file-select" aria-label="Choose a CSV file to study">
+                <option value="">-- Choose a file --</option>
+            </select>
+        </section>
+        
+        <section class="card-section" aria-label="Flashcard display">
+            <div class="card-container" id="card-container" data-flipped="false">
+                <div class="card" id="flashcard" role="button" tabindex="0" aria-label="Flashcard - click or press space to flip" data-side="question">
+                    <div class="card-front">
+                        <div class="card-content">
+                            <p>Select a file to begin</p>
+                        </div>
+                    </div>
+                    <div class="card-back">
+                        <div class="card-content">
+                            <p></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="progress" id="progress" role="status" aria-live="polite" aria-label="Study progress">
+                <span id="progress-text">0 of 0</span>
+            </div>
+        </section>
+        
+        <nav class="controls" role="navigation" aria-label="Flashcard controls">
+            <button id="prev-btn" class="control-btn" aria-label="Go to previous flashcard (Left arrow key)">
+                <span aria-hidden="true">◄</span> Previous
+            </button>
+            <button id="next-btn" class="control-btn" aria-label="Go to next flashcard (Right arrow key)">
+                Next <span aria-hidden="true">►</span>
+            </button>
+            <button id="shuffle-btn" class="control-btn" aria-label="Shuffle the deck">
+                <span aria-hidden="true">🔀</span> Shuffle
+            </button>
+            <button id="restart-btn" class="control-btn" aria-label="Restart from the beginning">
+                <span aria-hidden="true">↻</span> Restart
+            </button>
+        </nav>
+        
+        <aside class="keyboard-hints" aria-label="Keyboard shortcuts">
+            <p><strong>Keyboard shortcuts:</strong> Space/Enter = Flip card | ← → = Navigate | S = Shuffle | R = Restart</p>
+        </aside>
+        
+        <div id="error-message" class="error-message" role="alert" aria-live="assertive" aria-atomic="true"></div>
+    </main>
+    
+    <script src="{{ url_for('static', filename='js/deckManager.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/cardView.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
