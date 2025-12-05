@@ -141,6 +141,60 @@ main {
     box-shadow: var(--shadow-focus);
 }
 
+/* Upload Section */
+.upload-section {
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+}
+
+.upload-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-color);
+    font-size: var(--font-size-base);
+}
+
+#file-upload {
+    display: block;
+    margin: 0 auto var(--spacing-sm);
+    padding: var(--spacing-sm);
+    font-size: var(--font-size-base);
+    font-family: var(--font-family);
+    color: var(--text-color);
+    background-color: var(--secondary-color);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color var(--transition-fast);
+    max-width: 400px;
+    width: 100%;
+}
+
+#file-upload:hover {
+    border-color: var(--primary-color);
+}
+
+#file-upload:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-focus);
+}
+
+.upload-btn {
+    background: var(--accent-color);
+    margin-top: var(--spacing-sm);
+}
+
+.upload-btn:hover {
+    background: #27AE60;
+}
+
+.upload-btn:disabled {
+    background: var(--accent-color);
+}
+
 /* ===================================
    Card Section
    =================================== */
@@ -360,9 +414,13 @@ main {
     z-index: 1000;
 }
 
-.error-message.show {
+.error-message[style*="display: block"] {
     opacity: 1;
     visibility: visible;
+}
+
+.success-message {
+    background: var(--accent-color);
 }
 
 /* ===================================

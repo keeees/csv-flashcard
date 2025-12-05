@@ -17,6 +17,14 @@
             <select id="file-select" aria-label="Choose a CSV file to study">
                 <option value="">-- Choose a file --</option>
             </select>
+            
+            <div class="upload-section">
+                <label for="file-upload" class="upload-label">Or upload a new CSV file:</label>
+                <input type="file" id="file-upload" accept=".csv" aria-label="Upload a CSV file">
+                <button id="upload-btn" class="control-btn upload-btn" aria-label="Upload selected file">
+                    <span aria-hidden="true">📤</span> Upload
+                </button>
+            </div>
         </section>
         
         <section class="card-section" aria-label="Flashcard display">

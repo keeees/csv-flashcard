@@ -22,12 +22,15 @@ python app.py
 
 3. Visit `http://localhost:5000`
 
-## Deploy to Render
+## Deploy to Railway
 
 1. Push this repo to GitHub
-2. Connect your GitHub repo to Render
-3. Render will auto-detect the `render.yaml` configuration
-4. Deploy!
+2. Go to [railway.app](https://railway.app) and sign up
+3. Click "New Project" → "Deploy from GitHub repo"
+4. Select your flashcard repo
+5. Railway auto-detects everything and deploys! ✨
+
+No configuration needed - Railway reads `Procfile` and `requirements.txt` automatically.
 
 ## CSV Format
 

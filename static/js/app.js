@@ -24,7 +24,9 @@ class AppController {
       nextBtn: null,
       shuffleBtn: null,
       restartBtn: null,
-      errorMessage: null
+      errorMessage: null,
+      fileUpload: null,
+      uploadBtn: null
     };
   }
   
@@ -42,6 +44,8 @@ class AppController {
     this.elements.shuffleBtn = document.getElementById('shuffle-btn');
     this.elements.restartBtn = document.getElementById('restart-btn');
     this.elements.errorMessage = document.getElementById('error-message');
+    this.elements.fileUpload = document.getElementById('file-upload');
+    this.elements.uploadBtn = document.getElementById('upload-btn');
     
     // Initialize components
     this.deckManager = new DeckManager();
@@ -72,6 +76,9 @@ class AppController {
     // Action buttons
     this.elements.shuffleBtn.addEventListener('click', () => this.handleShuffleClick());
     this.elements.restartBtn.addEventListener('click', () => this.handleRestartClick());
+    
+    // Upload button
+    this.elements.uploadBtn.addEventListener('click', () => this.handleUploadClick());
     
     // Keyboard events
     document.addEventListener('keydown', (e) => this.handleKeyPress(e));
@@ -276,6 +283,67 @@ class AppController {
   }
   
   /**
+   * Handle upload button click
+   */
+  async handleUploadClick() {
+    const fileInput = this.elements.fileUpload;
+    const file = fileInput.files[0];
+    
+    if (!file) {
+      this.showError('Please select a file to upload');
+      return;
+    }
+    
+    // Validate file type
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      this.showError('Only CSV files are allowed');
+      return;
+    }
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      this.state.isLoading = true;
+      this.elements.uploadBtn.disabled = true;
+      this.elements.uploadBtn.textContent = 'Uploading...';
+      
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Upload failed');
+      }
+      
+      // Show success message
+      this.showSuccess(`${data.message} (${data.cardCount} cards)`);
+      
+      // Refresh file list
+      await this.fetchFiles();
+      
+      // Auto-select the uploaded file
+      this.elements.fileSelect.value = data.filename;
+      await this.loadFile(data.filename);
+      
+      // Clear file input
+      fileInput.value = '';
+      
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      this.showError(`Upload failed: ${error.message}`);
+    } finally {
+      this.state.isLoading = false;
+      this.elements.uploadBtn.disabled = false;
+      this.elements.uploadBtn.innerHTML = '<span aria-hidden="true">📤</span> Upload';
+    }
+  }
+  
+  /**
    * Handle keyboard events
    * Requirements: 9.1, 9.2, 9.3, 9.4
    * @param {KeyboardEvent} event - Keyboard event
@@ -335,6 +403,22 @@ class AppController {
    */
   showError(message) {
     this.elements.errorMessage.textContent = message;
+    this.elements.errorMessage.className = 'error-message';
+    this.elements.errorMessage.style.display = 'block';
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+      this.hideError();
+    }, 5000);
+  }
+  
+  /**
+   * Show a success message to the user
+   * @param {string} message - Success message to display
+   */
+  showSuccess(message) {
+    this.elements.errorMessage.textContent = message;
+    this.elements.errorMessage.className = 'error-message success-message';
     this.elements.errorMessage.style.display = 'block';
     
     // Auto-dismiss after 5 seconds
@@ -349,6 +433,7 @@ class AppController {
   hideError() {
     this.elements.errorMessage.style.display = 'none';
     this.elements.errorMessage.textContent = '';
+    this.elements.errorMessage.className = 'error-message';
   }
 }
 

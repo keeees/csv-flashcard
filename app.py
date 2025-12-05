@@ -1,8 +1,12 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 from utils.file_manager import list_csv_files, read_file
 from utils.csv_parser import parse_csv, CSVParseError
+import os
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['UPLOAD_FOLDER'] = 'data'
 
 # Add CORS headers for development
 @app.after_request
@@ -12,6 +16,11 @@ def add_cors_headers(response):
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
     return response
+
+
+def allowed_file(filename):
+    """Check if file has allowed extension"""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() == 'csv'
 
 
 @app.route('/')
@@ -114,6 +123,89 @@ def load_file(filename):
             'error': 'Permission denied',
             'message': str(e)
         }), 500
+    
+    except Exception as e:
+        return jsonify({
+            'error': 'Server error',
+            'message': f'An unexpected error occurred: {str(e)}'
+        }), 500
+
+
+@app.route('/api/upload', methods=['POST'])
+def upload_file():
+    """Upload a CSV file to the data directory
+    
+    Returns:
+        JSON response with success status and filename
+        
+    Error responses:
+        400: If no file provided, invalid file type, or CSV is malformed
+        500: If file cannot be saved or other server error
+    """
+    try:
+        # Check if file is in request
+        if 'file' not in request.files:
+            return jsonify({
+                'error': 'No file provided',
+                'message': 'Please select a file to upload'
+            }), 400
+        
+        file = request.files['file']
+        
+        # Check if file was selected
+        if file.filename == '':
+            return jsonify({
+                'error': 'No file selected',
+                'message': 'Please select a file to upload'
+            }), 400
+        
+        # Check if file type is allowed
+        if not allowed_file(file.filename):
+            return jsonify({
+                'error': 'Invalid file type',
+                'message': 'Only CSV files are allowed'
+            }), 400
+        
+        # Secure the filename
+        filename = secure_filename(file.filename)
+        
+        # Ensure data directory exists
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+        
+        # Read file content for validation
+        file_content = file.read().decode('utf-8')
+        
+        # Validate CSV format by parsing it
+        try:
+            flashcards = parse_csv(file_content)
+            if len(flashcards) == 0:
+                return jsonify({
+                    'error': 'Empty CSV',
+                    'message': 'The CSV file contains no valid flashcards'
+                }), 400
+        except CSVParseError as e:
+            return jsonify({
+                'error': 'Invalid CSV format',
+                'message': str(e)
+            }), 400
+        
+        # Save the file
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        with open(filepath, 'w', encoding='utf-8') as f:
+            f.write(file_content)
+        
+        return jsonify({
+            'success': True,
+            'filename': filename,
+            'message': f'File "{filename}" uploaded successfully',
+            'cardCount': len(flashcards)
+        }), 200
+    
+    except UnicodeDecodeError:
+        return jsonify({
+            'error': 'Encoding error',
+            'message': 'Unable to read file. Please ensure the file is UTF-8 encoded.'
+        }), 400
     
     except Exception as e:
         return jsonify({

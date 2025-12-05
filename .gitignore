@@ -20,3 +20,8 @@ htmlcov/
 
 # Node
 node_modules/
+
+# PyInstaller build artifacts
+build/
+dist/
+*.spec
